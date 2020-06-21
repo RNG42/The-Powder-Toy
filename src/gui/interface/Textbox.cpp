@@ -24,8 +24,7 @@ Textbox::Textbox(Point position, Point size, String textboxText, String textboxP
 	characterDown(0),
 	mouseDown(false),
 	masked(false),
-	border(true),
-	actionCallback(NULL)
+	border(true)
 {
 	placeHolder = textboxPlaceholder;
 
@@ -36,11 +35,6 @@ Textbox::Textbox(Point position, Point size, String textboxText, String textboxP
 	menu->AddItem(ContextMenuItem("Cut", 1, true));
 	menu->AddItem(ContextMenuItem("Copy", 0, true));
 	menu->AddItem(ContextMenuItem("Paste", 2, true));
-}
-
-Textbox::~Textbox()
-{
-	delete actionCallback;
 }
 
 void Textbox::SetHidden(bool hidden)
@@ -181,13 +175,13 @@ void Textbox::cutSelection()
 	{
 		cursorPositionY = cursorPositionX = 0;
 	}
-	if(actionCallback)
-		actionCallback->TextChangedCallback(this);
+	if (actionCallback.change)
+		actionCallback.change();
 }
 
 void Textbox::pasteIntoSelection()
 {
-	String newText = format::CleanString(ClipboardPull().FromUtf8(), true, true, inputType != Multiline, inputType == Number || inputType == Numeric);
+	String newText = format::CleanString(ClipboardPull().FromUtf8(), false, true, inputType != Multiline, inputType == Number || inputType == Numeric);
 	if (HasSelection())
 	{
 		if (getLowerSelectionBound() < 0 || getHigherSelectionBound() > (int)backingText.length())
@@ -251,8 +245,8 @@ void Textbox::pasteIntoSelection()
 	{
 		cursorPositionY = cursorPositionX = 0;
 	}
-	if(actionCallback)
-		actionCallback->TextChangedCallback(this);
+	if (actionCallback.change)
+		actionCallback.change();
 }
 
 bool Textbox::CharacterValid(int character)
@@ -269,7 +263,7 @@ bool Textbox::CharacterValid(int character)
 				return true;
 		case All:
 		default:
-			return (character >= ' ' && character < 127);
+			return character >= ' ' && character <= 0x10FFFF && !(character >= 0xD800 && character <= 0xDFFF) && !(character >= 0xFDD0 && character <= 0xFDEF) && !((character & 0xFFFF) >= 0xFFFE);
 	}
 	return false;
 }
@@ -469,8 +463,8 @@ void Textbox::AfterTextChange(bool changed)
 	{
 		cursorPositionY = cursorPositionX = 0;
 	}
-	if (changed && actionCallback)
-		actionCallback->TextChangedCallback(this);
+	if (changed && actionCallback.change)
+		actionCallback.change();
 }
 
 void Textbox::OnTextInput(String text)
@@ -500,7 +494,7 @@ void Textbox::OnTextInput(String text)
 			{
 				backingText.Insert(cursor, text);
 			}
-			cursor++;
+			cursor += text.length();
 		}
 		ClearSelection();
 		AfterTextChange(true);

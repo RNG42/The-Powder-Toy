@@ -56,6 +56,8 @@ Makefile.me
 *.layout
 *.config
 *.creator*
+*.cflags
+*.cxxflags
 *.files
 *.includes
 config.log
@@ -67,5 +69,7 @@ site_scons/site_tools/mfprogram/*.pyc
 site_scons/site_tools/gch/*.pyc
 .vscode/
 .vs/
+# Intentional merge conflict (meson stuff)
+subprojects/
 
 screenshot_*

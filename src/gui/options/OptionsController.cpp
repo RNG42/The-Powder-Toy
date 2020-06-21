@@ -5,9 +5,9 @@
 
 #include "Controller.h"
 
-OptionsController::OptionsController(GameModel * gModel_, ControllerCallback * callback_):
+OptionsController::OptionsController(GameModel * gModel_, std::function<void ()> onDone_):
 	gModel(gModel_),
-	callback(callback_),
+	onDone(onDone_),
 	HasExited(false)
 {
 	view = new OptionsView();
@@ -107,12 +107,17 @@ void OptionsController::SetIncludePressure(bool includePressure)
 	model->SetIncludePressure(includePressure);
 }
 
+void OptionsController::SetPerfectCircle(bool perfectCircle)
+{
+	model->SetPerfectCircle(perfectCircle);
+}
+
 void OptionsController::Exit()
 {
 	view->CloseActiveWindow();
 
-	if (callback)
-		callback->ControllerExit();
+	if (onDone)
+		onDone();
 	HasExited = true;
 }
 
@@ -122,6 +127,5 @@ OptionsController::~OptionsController()
 	view->CloseActiveWindow();
 	delete model;
 	delete view;
-	delete callback;
 }
 

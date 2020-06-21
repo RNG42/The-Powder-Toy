@@ -46,6 +46,7 @@ AddSconsOption("tool", False, True, "Tool prefix appended before gcc/g++.")
 
 AddSconsOption('beta', False, False, "Beta build.")
 AddSconsOption('no-install-prompt', False, False, "Disable the \"do you want to install Powder Toy?\" prompt.")
+AddSconsOption('ignore-updates', False, False, "Disable checking for updates.")
 AddSconsOption('save-version', False, True, "Save version.")
 AddSconsOption('minor-version', False, True, "Minor version.")
 AddSconsOption('build-number', False, True, "Build number.")
@@ -170,7 +171,7 @@ if GetOption('universal'):
 		env.Append(CCFLAGS=['-arch', 'i386', '-arch', 'x86_64'])
 		env.Append(LINKFLAGS=['-arch', 'i386', '-arch', 'x86_64'])
 
-env.Append(CPPPATH=['src/', 'data/', 'generated/'])
+env.Append(CPPPATH=['src/', 'data/'])
 if GetOption("msvc"):
 	if GetOption("static"):
 		env.Append(LIBPATH=['StaticLibs/'])
@@ -227,7 +228,7 @@ def findLibs(env, conf):
 		if msvc:
 			libChecks = ['shell32', 'wsock32', 'user32', 'Advapi32', 'ws2_32', 'Wldap32', 'crypt32']
 			if GetOption('static'):
-				libChecks += ['imm32', 'version', 'Ole32', 'OleAut32']
+				libChecks += ['imm32', 'version', 'Ole32', 'OleAut32', 'SetupApi']
 			for i in libChecks:
 				if not conf.CheckLib(i):
 					FatalError("Error: some windows libraries not found or not installed, make sure your compiler is set up correctly")
@@ -339,6 +340,11 @@ def findLibs(env, conf):
 		else:
 			env.ParseConfig("curl-config --libs")
 
+		# Needed for ssl. Scons seems incapable of parsing this out of curl-config
+		if platform == "Darwin":
+			if not conf.CheckFramework('Security'):
+				FatalError("Could not find Security.Framework")
+
 	#Look for pthreads
 	if not conf.CheckLib(['pthread', 'pthreadVC2']):
 		FatalError("pthreads development library not found or not installed")
@@ -385,11 +391,7 @@ def findLibs(env, conf):
 			FatalError("Cocoa framework not found or not installed")
 
 if GetOption('clean'):
-	import shutil
-	try:
-		shutil.rmtree("generated/")
-	except:
-		print("couldn't remove build/generated/")
+	pass
 elif not GetOption('help'):
 	conf = Configure(env)
 	conf.AddTest('CheckFramework', CheckFramework)
@@ -548,10 +550,12 @@ if GetOption('beta'):
 	env.Append(CPPDEFINES=['BETA'])
 if GetOption('no-install-prompt'):
 	env.Append(CPPDEFINES=['NO_INSTALL_CHECK'])
+if GetOption('ignore-updates'):
+	env.Append(CPPDEFINES=['IGNORE_UPDATES'])
 
 
 #Generate list of sources to compile
-sources = Glob("src/*.cpp") + Glob("src/*/*.cpp") + Glob("src/*/*/*.cpp") + Glob("generated/*.cpp") + Glob("data/*.cpp")
+sources = Glob("src/*.cpp") + Glob("src/*/*.cpp") + Glob("src/*/*/*.cpp") + Glob("data/*.cpp")
 if not GetOption('nolua') and not GetOption('renderer') and not GetOption('font'):
 	sources += Glob("src/lua/socket/*.c") + Glob("src/lua/LuaCompat.c")
 

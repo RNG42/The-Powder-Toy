@@ -69,6 +69,7 @@ private:
 	unsigned int undoHistoryLimit;
 	bool mouseClickRequired;
 	bool includePressure;
+	bool perfectCircle = true;
 
 	size_t activeColourPreset;
 	std::vector<ui::Colour> colourPresets;
@@ -133,6 +134,7 @@ public:
 
 	void BuildMenus();
 	void BuildFavoritesMenu();
+	void BuildBrushList();
 	void BuildQuickOptionMenu(GameController * controller);
 
 	std::deque<Snapshot*> GetHistory();
@@ -169,16 +171,17 @@ public:
 	void SetSaveFile(SaveFile * newSave, bool invertIncludePressure);
 	void AddObserver(GameView * observer);
 
-	bool GetPaused();
 	void SetPaused(bool pauseState);
-	bool GetDecoration();
+	bool GetPaused();
 	void SetDecoration(bool decorationState);
-	bool GetAHeatEnable();
+	bool GetDecoration();
 	void SetAHeatEnable(bool aHeat);
-	bool GetNewtonianGrvity();
+	bool GetAHeatEnable();
+	void ResetAHeat();
 	void SetNewtonianGravity(bool newtonainGravity);
-	bool GetGravityGrid();
+	bool GetNewtonianGrvity();
 	void ShowGravityGrid(bool showGrid);
+	bool GetGravityGrid();
 	void ClearSimulation();
 	std::vector<Menu*> GetMenuList();
 	std::vector<QuickOption*> GetQuickOptions();
@@ -211,6 +214,7 @@ public:
 	void SetMouseClickRequired(bool mouseClickRequired);
 	bool GetIncludePressure();
 	void SetIncludePressure(bool includePressure);
+	void SetPerfectCircle(bool perfectCircle);
 
 	std::vector<Notification*> GetNotifications();
 	void AddNotification(Notification * notification);

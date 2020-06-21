@@ -1,7 +1,8 @@
 #ifndef OPTIONSCONTROLLER_H_
 #define OPTIONSCONTROLLER_H_
 
-class ControllerCallback;
+#include <functional>
+
 class GameModel;
 class OptionsModel;
 class OptionsView;
@@ -10,10 +11,10 @@ class OptionsController
 	GameModel * gModel;
 	OptionsView * view;
 	OptionsModel * model;
-	ControllerCallback * callback;
+	std::function<void ()> onDone;
 public:
 	bool HasExited;
-	OptionsController(GameModel * gModel_, ControllerCallback * callback_);
+	OptionsController(GameModel * gModel_, std::function<void ()> onDone = nullptr);
 	void SetHeatSimulation(bool state);
 	void SetAmbientHeatSimulation(bool state);
 	void SetNewtonianGravity(bool state);
@@ -31,6 +32,7 @@ public:
 	void SetShowAvatars(bool showAvatars);
 	void SetMouseClickrequired(bool mouseClickRequired);
 	void SetIncludePressure(bool includePressure);
+	void SetPerfectCircle(bool perfectCircle);
 	
 	void Exit();
 	OptionsView * GetView();

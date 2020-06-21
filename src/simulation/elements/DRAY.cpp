@@ -1,6 +1,8 @@
 #include "simulation/ElementCommon.h"
-//#TPT-Directive ElementClass Element_DRAY PT_DRAY 178
-Element_DRAY::Element_DRAY()
+
+static int update(UPDATE_FUNC_ARGS);
+
+void Element::Element_DRAY()
 {
 	Identifier = "DEFAULT_PT_DRAY";
 	Name = "DRAY";
@@ -26,7 +28,6 @@ Element_DRAY::Element_DRAY()
 
 	Weight = 100;
 
-	Temperature = R_TEMP + 273.15f;
 	HeatConduct = 0;
 	Description = "Duplicator ray. Replicates a line of particles in front of it.";
 
@@ -41,19 +42,18 @@ Element_DRAY::Element_DRAY()
 	HighTemperature = ITH;
 	HighTemperatureTransition = NT;
 
-	Update = &Element_DRAY::update;
-	Graphics = nullptr;
+	Update = &update;
+	Graphics = nullptr; // is this needed?
 	CtypeDraw = &Element::ctypeDrawVInCtype;
 }
 
 //should probably be in Simulation.h
-bool InBounds(int x, int y)
+static bool InBounds(int x, int y)
 {
 	return (x>=0 && y>=0 && x<XRES && y<YRES);
 }
 
-//#TPT-Directive ElementHeader Element_DRAY static int update(UPDATE_FUNC_ARGS)
-int Element_DRAY::update(UPDATE_FUNC_ARGS)
+static int update(UPDATE_FUNC_ARGS)
 {
 	int ctype = TYP(parts[i].ctype), ctypeExtra = ID(parts[i].ctype), copyLength = parts[i].tmp, copySpaces = parts[i].tmp2;
 	if (copySpaces < 0)
@@ -72,7 +72,7 @@ int Element_DRAY::update(UPDATE_FUNC_ARGS)
 					if (TYP(r) == PT_SPRK && parts[ID(r)].life == 3) //spark found, start creating
 					{
 						bool overwrite = parts[ID(r)].ctype == PT_PSCN;
-						int partsRemaining = copyLength, xCopyTo, yCopyTo; //positions where the line will start being copied at
+						int partsRemaining = copyLength, xCopyTo = -1, yCopyTo = -1; //positions where the line will start being copied at
 						int localCopyLength = copyLength;
 
 						if (parts[ID(r)].ctype == PT_INWR && rx && ry) // INWR doesn't spark from diagonals
@@ -83,6 +83,9 @@ int Element_DRAY::update(UPDATE_FUNC_ARGS)
 						bool isEnergy = false;
 						for (int xStep = rx*-1, yStep = ry*-1, xCurrent = x+xStep, yCurrent = y+yStep; ; xCurrent+=xStep, yCurrent+=yStep)
 						{
+							// Out of bounds, stop looking and don't copy anything
+							if (!sim->InBounds(xCurrent, yCurrent))
+								break;
 							int rr;
 							// haven't found a particle yet, keep looking for one
 							// the first particle it sees decides whether it will copy energy particles or not
@@ -107,9 +110,8 @@ int Element_DRAY::update(UPDATE_FUNC_ARGS)
 							// Checks for when to stop:
 							//  1: if .tmp isn't set, and the element in this spot is the ctype, then stop
 							//  2: if .tmp is set, stop when the length limit reaches 0
-							//  3. Stop when we are out of bounds
 							if ((!localCopyLength && TYP(rr) == ctype && (ctype != PT_LIFE || parts[ID(rr)].ctype == ctypeExtra))
-									|| !(--partsRemaining && InBounds(xCurrent+xStep, yCurrent+yStep)))
+									|| !--partsRemaining)
 							{
 								localCopyLength -= partsRemaining;
 								xCopyTo = xCurrent + xStep*copySpaces;
@@ -168,5 +170,3 @@ int Element_DRAY::update(UPDATE_FUNC_ARGS)
 	}
 	return 0;
 }
-
-Element_DRAY::~Element_DRAY() {}
